@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/lxc/incus/v6/shared/api"
-	config "github.com/lxc/incus/v6/shared/cliconfig"
 )
 
 // InstanceUsers returns a list of users listed in an instance's /etc/passwd
@@ -155,7 +154,7 @@ func (c *Client) Wait(name string, vm bool, project string) ([]byte, error) {
 
 // StartInstance starts an existing instance
 func (c *Client) StartInstance(ctx context.Context, name string) error {
-	d, err := c.conf.GetInstanceServer(config.DefaultConfig().DefaultRemote)
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
 	if err != nil {
 		return err
 	}
@@ -171,7 +170,7 @@ func (c *Client) StartInstance(ctx context.Context, name string) error {
 
 // StopInstance stops an existing instance
 func (c *Client) StopInstance(ctx context.Context, name string) error {
-	d, err := c.conf.GetInstanceServer(config.DefaultConfig().DefaultRemote)
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
 	if err != nil {
 		return err
 	}
@@ -187,7 +186,7 @@ func (c *Client) StopInstance(ctx context.Context, name string) error {
 
 // DeleteInstance deletes an existing instance
 func (c *Client) DeleteInstance(ctx context.Context, name string) error {
-	d, err := c.conf.GetInstanceServer(config.DefaultConfig().DefaultRemote)
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
 	if err != nil {
 		return err
 	}
