@@ -152,6 +152,21 @@ func (c *Client) Wait(name string, vm bool, project string) ([]byte, error) {
 	return outbuf.Bytes(), nil
 }
 
+// InstanceState returns the state of an instance
+func (c *Client) InstanceState(ctx context.Context, name string) (*api.InstanceFull, error) {
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the full instance data.
+	inst, _, err := d.GetInstanceFull(name)
+	if err != nil {
+		return nil, err
+	}
+	return inst, err
+}
+
 // StartInstance starts an existing instance
 func (c *Client) StartInstance(ctx context.Context, name string) error {
 	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
