@@ -136,10 +136,10 @@ func (c *Client) SetProject(id uint) {
 }
 
 // Launch creates and starts a new Instance
-func (c *Client) Launch(image string, name string, profiles []string, extraConfigs map[string]string, vm, launch bool) error {
+func (c *Client) Launch(image string, name string, profiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, vm, launch bool) error {
 	// Call the matching code from init
 	// skip userdata for now
-	d, _, err := c.create(image, name, profiles, extraConfigs, vm, launch)
+	d, _, err := c.create(image, name, profiles, extraConfigs, deviceOverrides, vm, launch)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Client) Launch(image string, name string, profiles []string, extraConfi
 	return nil
 }
 
-func (c *Client) create(image string, name string, requestedProfiles []string, extraConfigs map[string]string, vm, launch bool) (incus.InstanceServer, string, error) {
+func (c *Client) create(image string, name string, requestedProfiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, vm, launch bool) (incus.InstanceServer, string, error) {
 
 	var remote string
 	var iremote string
@@ -219,7 +219,6 @@ func (c *Client) create(image string, name string, requestedProfiles []string, e
 	req.Description = stdinData.Description
 
 	req.Profiles = profiles
-	deviceOverrides := map[string]map[string]string{}
 
 	// Check to see if any of the overridden devices are for devices that are not yet defined in the
 	// local devices (and thus maybe expected to be coming from profiles).
