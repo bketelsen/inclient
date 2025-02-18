@@ -88,7 +88,7 @@ func (c *Client) Profile(ctx context.Context, name string) (*api.Profile, error)
 }
 
 // Networks returns a list of Networks from Incus
-func (c *Client) Networks(ctx context.Context, name string) ([]api.Network, error) {
+func (c *Client) Networks(ctx context.Context) ([]api.Network, error) {
 	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
 	if err != nil {
 		return []api.Network{}, err
@@ -136,10 +136,10 @@ func (c *Client) SetProject(id uint) {
 }
 
 // Launch creates and starts a new Instance
-func (c *Client) Launch(image string, name string, profiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, vm, launch bool) error {
+func (c *Client) Launch(image string, name string, profiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, netname string, vm, launch bool) error {
 	// Call the matching code from init
 	// skip userdata for now
-	d, _, err := c.create(image, name, profiles, extraConfigs, deviceOverrides, vm, launch)
+	d, _, err := c.create(image, name, profiles, extraConfigs, deviceOverrides, netname, vm, launch)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Client) Launch(image string, name string, profiles []string, extraConfi
 	return nil
 }
 
-func (c *Client) create(image string, name string, requestedProfiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, vm, launch bool) (incus.InstanceServer, string, error) {
+func (c *Client) create(image string, name string, requestedProfiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, netName string, vm, launch bool) (incus.InstanceServer, string, error) {
 
 	var remote string
 	var iremote string
@@ -199,6 +199,41 @@ func (c *Client) create(image string, name string, requestedProfiles []string, e
 	profiles = append(profiles, requestedProfiles...)
 
 	devicesMap = map[string]map[string]string{}
+
+	if netName != "" {
+		network, _, err := d.GetNetwork(netName)
+		if err != nil {
+			return nil, "", fmt.Errorf("Failed loading network %q: %w", network, err)
+		}
+
+		// Prepare the instance's NIC device entry.
+		var device map[string]string
+
+		if network.Managed && d.HasExtension("instance_nic_network") {
+			// If network is managed, use the network property rather than nictype, so that the
+			// network's inherited properties are loaded into the NIC when started.
+			device = map[string]string{
+				"name":    "eth0",
+				"type":    "nic",
+				"network": network.Name,
+			}
+		} else {
+			// If network is unmanaged default to using a macvlan connected to the specified interface.
+			device = map[string]string{
+				"name":    "eth0",
+				"type":    "nic",
+				"nictype": "macvlan",
+				"parent":  network.Name,
+			}
+
+			if network.Type == "bridge" {
+				// If the network type is an unmanaged bridge, use bridged NIC type.
+				device["nictype"] = "bridged"
+			}
+		}
+
+		devicesMap["eth0"] = device
+	}
 
 	// Decide whether we are creating a container or a virtual machine.
 	instanceDBType := api.InstanceTypeContainer
