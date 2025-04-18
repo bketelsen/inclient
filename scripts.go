@@ -493,6 +493,31 @@ func (c *Client) IsTrueNAS(ctx context.Context) (bool, error) {
 	}
 	return IsTrueNAS(d)
 }
+func (c *Client) RemoveConfig(ctx context.Context, name string, configName string) error {
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
+	if err != nil {
+		return err
+	}
+	inst, etag, err := d.GetInstance(name)
+	if err != nil {
+		return err
+	}
+
+	_, ok := inst.Config[configName]
+	if ok {
+		return fmt.Errorf("the configuration does not exist")
+	}
+
+	inst.Config[configName] = ""
+
+	op, err := d.UpdateInstance(name, inst.Writable(), etag)
+	if err != nil {
+		return err
+	}
+
+	return op.Wait()
+
+}
 func IsTrueNAS(d incus.InstanceServer) (bool, error) {
 	s, _, err := d.GetServer()
 	if err != nil {
