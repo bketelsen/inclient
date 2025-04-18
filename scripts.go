@@ -203,7 +203,7 @@ func (c *Client) create(image string, name string, requestedProfiles []string, e
 	if netName != "" {
 		network, _, err := d.GetNetwork(netName)
 		if err != nil {
-			return nil, "", fmt.Errorf("Failed loading network %q: %w", network, err)
+			return nil, "", fmt.Errorf("failed loading network %q: %w", network.Name, err)
 		}
 
 		// Prepare the instance's NIC device entry.
@@ -483,4 +483,15 @@ func (c *Client) checkNetwork(d incus.InstanceServer, name string) {
 	fmt.Fprintf(os.Stderr, "\nThe instance you are starting doesn't have any network attached to it.\n")
 	fmt.Fprintf(os.Stderr, "  To create a new network, use: incus network create\n")
 	fmt.Fprintf(os.Stderr, "  To attach a network to an instance, use: incus network attach\n\n")
+}
+
+func IsTrueNAS(d incus.InstanceServer) (bool, error) {
+	s, _, err := d.GetServer()
+	if err != nil {
+		return false, err
+	}
+	if strings.Contains(s.Environment.KernelVersion, "truenas") {
+		return true, nil
+	}
+	return false, nil
 }
