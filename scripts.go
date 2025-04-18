@@ -486,7 +486,7 @@ func (c *Client) checkNetwork(d incus.InstanceServer, name string) {
 }
 
 // Instance returns a single instance from Incus
-func (c *Client) IsTrueNAS(ctx context.Context, name string) (bool, error) {
+func (c *Client) IsTrueNAS(ctx context.Context) (bool, error) {
 	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
 	if err != nil {
 		return false, err
