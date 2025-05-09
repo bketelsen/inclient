@@ -135,6 +135,19 @@ func (c *Client) SetProject(id uint) {
 	c.conf.ProjectOverride = c.projectList[id]
 }
 
+// StorageList returns the list of Storage Pools from Incus
+func (c *Client) StorageList(ctx context.Context) ([]api.StoragePool, error) {
+	d, err := c.conf.GetInstanceServer(c.conf.DefaultRemote)
+	if err != nil {
+		return []api.StoragePool{}, err
+	}
+	sp, err := d.GetStoragePools()
+	if err != nil {
+		return []api.StoragePool{}, err
+	}
+	return sp, nil
+}
+
 // Launch creates and starts a new Instance
 func (c *Client) Launch(image string, name string, profiles []string, extraConfigs map[string]string, deviceOverrides map[string]map[string]string, netname string, vm, launch bool) error {
 	// Call the matching code from init
